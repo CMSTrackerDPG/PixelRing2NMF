@@ -1,0 +1,116 @@
+Description: NMF model for pixel cluster occupancy Ring 2
+Resources:
+  PixelRing2NMF:
+    ModelType: SKLearn
+    Properties:
+      AnomalyThreshold: null
+      BuiltinThreshold: true
+      CodeUri: s3://dials-test/stage=dev/workspace=global/cat=machine_learning_builds/username=alaperto/3c06de950fe64dda984eeb1577622435.zip
+      Description: Spot anomalies in the pixel cluster occupancy (Ring 2)
+      FlaggingKey: Flag
+      Handler: app.Handler
+      Image: registry.cern.ch/docker.io/seldonio/mlserver:1.5.0
+      InferenceOnConditions:
+        AllowedComponentsOut: null
+        AllowedPrimaryDatasets:
+        - ZeroBias
+        Clock: LHC
+        FillType: PROTONS
+        HLTConfigMatch: .*/physics/.*
+        L1KeyMatch: .*collisions.*
+        L1MenuMatch: .*_Collisions.*_.*
+        MaxRunNumber: 999999
+        MinBField: 3.5
+        MinDeliveredLuminosity: null
+        MinEnergy: 6500.0
+        MinNumberOfLumisection: null
+        MinRecordedLuminosity: null
+        MinRunNumber: 382800
+        NoComponentOut: null
+        Sequence: GLOBAL-RUN
+        StableBeams: true
+      InputMetadata:
+      - Attributes:
+        - DataType: INT32
+          Dims:
+          - -1
+          Name: run_number
+        - DataType: INT32
+          Dims:
+          - -1
+          Name: lumisection_number
+        - DataType: FP32
+          Dims:
+          - -1
+          Name: pileup
+        - DataType: BOOL
+          Dims:
+          - -1
+          Name: cms_active
+        - DataType: BOOL
+          Dims:
+          - -1
+          Name: beams_stable
+        - DataType: BOOL
+          Dims:
+          - -1
+          Name: bpix_ready
+        - DataType: BOOL
+          Dims:
+          - -1
+          Name: fpix_ready
+        - DataType: BOOL
+          Dims:
+          - -1
+          Name: tibtid_ready
+        - DataType: BOOL
+          Dims:
+          - -1
+          Name: tob_ready
+        - DataType: BOOL
+          Dims:
+          - -1
+          Name: tecp_ready
+        - DataType: BOOL
+          Dims:
+          - -1
+          Name: tecm_ready
+        Endpoint: lumisections
+        Filter: null
+        Name: oms_lumisection_info
+        Source: OMS
+      InputSignature:
+      - DataType: INT32
+        Dims:
+        - -1
+        - 140
+        - 56
+        MonitoringElement: PixelPhase1/Phase1_MechanicalView/PXForward/clusters_per_SignedDiskCoord_per_SignedBladePanelCoord_PXRing_2
+        Name: Ring2
+      MetricKey: Metric
+      ModelUri: pixelring2nmf.joblib
+      Name: pixel-ring2-nmf
+      OutputSignature:
+      - DataType: BOOL
+        Dims:
+        - -1
+        Name: Flag
+      - DataType: FP32
+        Dims:
+        - -1
+        Name: Metric
+      Resources:
+        Limits:
+          cpu: null
+          gpu: null
+          memory: null
+        Requests:
+          cpu: null
+          gpu: null
+          memory: null
+      Tags: null
+    ServingFrameworkType: MLServer
+    SuperType: InferenceService
+    Type: InferenceService::MLServer::SKLearn
+    Workspace: global
+TemplateFormatVersion: '2025-03-31'

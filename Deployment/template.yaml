@@ -1,0 +1,115 @@
+TemplateFormatVersion: "2025-03-31"
+Description: NMF model for pixel cluster occupancy Ring 2
+Resources:
+  PixelRing2NMF:
+    Type: InferenceService::MLServer::SKLearn
+    Workspace: global
+    Properties:
+
+      # general properties
+      Description: Spot anomalies in the pixel cluster occupancy (Ring 2)
+      Name: pixel-ring2-nmf
+      Image: registry.cern.ch/docker.io/seldonio/mlserver:1.5.0
+      # note: the FlaggingKey and MetricKey should correspond to one of the names in the ResponseOutput,
+      #       defined in mlserver-model/app.py/postprocess!
+      FlaggingKey: Flag
+      MetricKey: Metric
+      BuiltinThreshold: true
+
+      # set conditions for running inference
+      InferenceOnConditions:
+        StableBeams: True
+        AllowedPrimaryDatasets:
+          - ZeroBias
+        MinRunNumber: 382800
+        MaxRunNumber: 999999
+        FillType: PROTONS
+        MinBField: 3.5
+        MinEnergy: 6500
+        Clock: LHC
+        Sequence: GLOBAL-RUN
+        L1KeyMatch: .*collisions.*
+        L1MenuMatch: .*_Collisions.*_.*
+        HLTConfigMatch: .*/physics/.*
+
+      # extra input data from OMS
+      InputMetadata:
+        - Name: oms_lumisection_info
+          Source: OMS
+          Endpoint: lumisections
+          Attributes:
+            - Name: run_number
+              DataType: TYPE_INT32
+              Dims:
+                - -1
+            - Name: lumisection_number
+              DataType: TYPE_INT32
+              Dims:
+                - -1
+            - Name: pileup
+              DataType: TYPE_FP32
+              Dims:
+                - -1
+            - Name: cms_active
+              DataType: TYPE_BOOL
+              Dims:
+                - -1
+            - Name: beams_stable
+              DataType: TYPE_BOOL
+              Dims:
+                - -1
+            - Name: bpix_ready
+              DataType: TYPE_BOOL
+              Dims:
+                - -1
+            - Name: fpix_ready
+              DataType: TYPE_BOOL
+              Dims:
+                - -1
+            - Name: tibtid_ready
+              DataType: TYPE_BOOL
+              Dims:
+                - -1
+            - Name: tob_ready
+              DataType: TYPE_BOOL
+              Dims:
+                - -1
+            - Name: tecp_ready
+              DataType: TYPE_BOOL
+              Dims:
+                - -1
+            - Name: tecm_ready
+              DataType: TYPE_BOOL
+              Dims:
+                - -1
+
+      # input data
+      InputSignature:
+        - Name: Ring2
+          MonitoringElement: PixelPhase1/Phase1_MechanicalView/PXForward/clusters_per_SignedDiskCoord_per_SignedBladePanelCoord_PXRing_2
+          DataType: TYPE_INT32
+          Dims:
+            - -1
+            - 140
+            - 56
+      OutputSignature:
+        - Name: Flag
+          DataType: TYPE_BOOL
+          Dims:
+            - -1
+        - Name: Metric
+          DataType: TYPE_FP32
+          Dims:
+            - -1
+      CodeUri: mlserver-model/
+      Handler: app.Handler
+      ModelUri: mlserver-model/pixelring2nmf.joblib
+      Resources:
+        Requests:
+          cpu: null
+          gpu: null
+          memory: null
+        Limits:
+          cpu: null
+          gpu: null
+          memory: null
