@@ -2,4 +2,5 @@ Development/data/not_used
 Development/data/*.parquet
 Development/models/components/*.png
 Development/results/output_*/Predictions.npy
+Development/notebooks/__pycache__/
 Deployment/test_data.pkl
