@@ -4,3 +4,4 @@ Development/models/components/*.png
 Development/results/output_*/Predictions.npy
 Development/notebooks/__pycache__/
 Deployment/test_data.pkl
+Deployment/mlserver-model/__pycache__/
