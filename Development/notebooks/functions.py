@@ -555,6 +555,7 @@ def plot_fpix_digi(file, run_number, lumi_number, savefig=False):
     #Call the plot function with all of the specifics
     save_digis_png(data, run_number, lumi_number, ring_num, savefig)
     
+   
     
 def plot_digis_ax(data_twodim, run_number, ls, ring, fig=None, axis=None):
 #togliere fi e salvare png firettamente per l'ultimo layer
@@ -644,7 +645,128 @@ def plot_testing_plots(data, mes_pred, losses, losses_binary, run_number, lumi_n
     if showFig: plt.show()
     plt.close()
     return fig, axes
+
+def public_digis_ax(data_twodim, label, style, ring, fig=None, axis=None):
     
+    #Create the fig and ax if they are not passed to the function
+    if fig==None or axis==None:
+        fig, axis = plt.subplots(1, 1, figsize=(5, 8))
+    
+    #FONTSIZE = 16
+    FONTSIZE = 20
+        
+    # 1x2 grid for the endcap
+    fi = ring+1-2
+    fig, ax = fig, axis
+    x_label, y_label = "Disk", "Panel"  # Axis labels for the Endcap
+    x_ticks = [8 * (i + 3) + 3.5 for i in range(-3, 4)]
+    x_ticklabels = range(-3, 4)
+    y_ticks = range(0, 13, 2)  # Define later
+    y_ticklabels = range(-6, 7, 2)
+
+    # Loop to generate each subplot with the data of the layer or ring
+    sample_hist = data_twodim
+    if ring == 1: #Ring 1
+        y_ticks = [4 * (i + 11) + 0.5 for i in range(-11, 12, 1)]
+        y_ticklabels = range(-11, 12, 1)
+    elif ring == 2: #Ring 2
+        y_ticks = [4 * (i + 17) + 0.5 for i in range(-17, 18, 2)]
+        y_ticklabels = range(-17, 18, 2)
+
+    # Show the heatmap for each layer or ring
+    im = ax.imshow(sample_hist, cmap=style, aspect='auto')
+
+    # Set axis labels
+    ax.set_xlabel(x_label, fontsize=FONTSIZE)
+    ax.set_ylabel(y_label, fontsize=FONTSIZE)
+
+    # Set ticks and labels for x-axis
+    ax.set_xticks(x_ticks)
+    #ax.set_xticklabels(x_ticklabels, rotation=45, ha='right')
+    ax.set_xticklabels(x_ticklabels, ha='right', fontsize=FONTSIZE)
+
+    # Set ticks and labels for y-axis
+    ax.set_yticks(y_ticks)
+    ax.set_yticklabels(y_ticklabels, ha='right', fontsize=FONTSIZE)
+    #ax.set_yticklabels(y_ticklabels, rotation=45, ha='right')
+    ax.invert_yaxis()
+
+    # Add color bar for each subplot
+    cbar = fig.colorbar(im, ax=ax, label=label)
+
+    ## Set colorbar label and tick with font size
+    cbar.set_label(label=label, fontsize=FONTSIZE)
+    cbar.ax.tick_params(labelsize=FONTSIZE)
+
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    
+    #Save the figure and show it
+    return fig, ax
+
+
+def plot_public_plots(data, mes_pred, losses, losses_binary, powergroups, run_number, lumi_number, ring_num, directory="images", saveFig=False, showFig=False):
+    #5, 8 is the figsize of one digis plot, and we have 4 side by side. 
+    fig, axes = plt.subplots(1, 5, figsize=(25, 8))
+    
+    FONTSIZE=25
+    fig.text(0.035, 0.95, "CMS", fontsize=FONTSIZE*1.25, fontweight='bold', ha="left")
+    fig.text(0.075, 0.95, "Preliminary", fontsize=FONTSIZE, fontstyle="italic", ha="left")
+    fig.text(0.94, 0.95, "2025 (13.6 TeV)", fontsize=FONTSIZE, ha="right")
+    
+    public_digis_ax(data, "Cluster occupancy", "viridis", ring_num, fig, axes[0])
+    axes[0].set_title(f'Data', fontsize=FONTSIZE)
+
+    public_digis_ax(mes_pred, "Cluster occupancy", "viridis", ring_num, fig, axes[1])
+    axes[1].set_title(f'Prediction', fontsize=FONTSIZE)
+
+    loss_style = 'coolwarm'
+    public_digis_ax(losses, "Loss", loss_style, ring_num, fig, axes[2])
+    axes[2].set_title(f'Loss', fontsize=FONTSIZE)
+
+    public_digis_ax(losses_binary, "Binary loss", loss_style, ring_num, fig, axes[3])
+    axes[3].set_title(f'Binary loss', fontsize=FONTSIZE)
+
+    #clean losses_binary, then fill = 1 the powergroups
+    anomaly_binary = losses_binary.copy()
+    anomaly_binary[:] = 0
+    for powergroup in powergroups:
+        panels, disk = powerGroupToDiskPanels(powergroup, 2)
+        for i, panel in enumerate(panels):
+            panelSlice, diskSlice = panelDiskToIndex(panel, disk, 2)
+            anomaly_binary[panelSlice, diskSlice] = 2
+    public_digis_ax(anomaly_binary,  "Cleaned loss", loss_style, ring_num, fig, axes[4])
+    axes[4].set_title(f'Cleaned loss', fontsize=FONTSIZE)
+
+    if saveFig:
+        #If we don't already have a directory then make it
+        if not os.path.exists(directory): os.makedirs(directory)
+        plt.savefig(directory + f"/NMF_run_{run_number}_LS_{lumi_number}_ring_{ring_num}.png")
+    if showFig: plt.show()
+    plt.close()
+    return fig, axes
+    
+
+
+def plot_components(data, ring_num, directory="images", saveFig=False, showFig=False):
+    #5, 8 is the figsize of one digis plot, and we have 4 side by side. 
+    fig, axes = plt.subplots(1, 5, figsize=(25, 8))
+    
+    FONTSIZE=25
+    #fig.text(0.025, 0.95, "CMS", fontsize=FONTSIZE*1.25, fontweight='bold', ha="left")
+    #fig.text(0.065, 0.95, "Preliminary", fontsize=FONTSIZE, style="italic", ha="left")
+    fig.text(0.17, 0.95, "FPIX Ring 2 NMF model", fontsize=FONTSIZE, ha="right")
+    fig.text(0.955, 0.95, "2025 (13.6 TeV)", fontsize=FONTSIZE, ha="right")
+    
+    style = "coolwarm"
+    style = "hot_r"
+    
+    for i in range(5):
+      public_digis_ax(data[i], "Cluster occupancy", style, ring_num, fig, axes[i])
+      axes[i].set_title(f'NMF component {i+1}', fontsize=FONTSIZE)
+
+    if showFig: plt.show()
+    plt.close()
+    return fig, axes
 
 ################################################################################
 #######                        Data Processing                            ######
